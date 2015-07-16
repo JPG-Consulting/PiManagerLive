@@ -3,6 +3,8 @@
 # Install applications we need to build the environment.
 apt-get --yes install debootstrap syslinux isolinux squashfs-tools genisoimage xorriso memtest86+ rsync wget ca-certificates
 
+CWD=$(pwd)
+
 #----------------------------------------------------------#
 #                      Configuration                       #
 #----------------------------------------------------------#
@@ -164,6 +166,9 @@ cp /usr/lib/syslinux/modules/bios/menu.c32 $BASE_DIR/image/isolinux/
 
 # Build CD
 cd $BASE_DIR && xorriso -as mkisofs -r -J -joliet-long -l -cache-inodes -isohybrid-mbr /usr/lib/ISOLINUX/isohdpfx.bin -partition_offset 16 -A "Debian Live"  -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -o debian-live.iso image
+
+mv $BASE_DIR/debian-live.iso $CWD/debian-live.iso
+rm -rf $BASE_DIR/image
 
 echo ""
 echo "Done."
