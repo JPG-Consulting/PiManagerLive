@@ -10,6 +10,7 @@ apt-get --yes install debootstrap syslinux isolinux squashfs-tools genisoimage x
 BASE_DIR="/usr/share/raspbian-live"
 LIVE_ARCH="i386"
 LIVE_DISTRO="jessie"
+KERNEL_VERSION="3.16.0-4-586"
 
 # Load configuration
 if [ -f /etc/raspbian-live ]; then
@@ -43,6 +44,10 @@ fi
 # Setup the base Debian environment
 debootstrap --arch=$LIVE_ARCH --variant=minbase $LIVE_DISTRO $BASE_DIR/chroot http://ftp.us.debian.org/debian/
 
+# A couple of important steps before we chroot
+mount -o bind /dev $BASE_DIR/chroot/dev
+cp /etc/resolv.conf $BASE_DIR/chroot/etc/resolv.conf
+
 #----------------------------------------------------------#
 #                 Read/Write Filesystem                    #
 #----------------------------------------------------------#
@@ -60,8 +65,40 @@ fi
 mount $BASE_DIR/raspberrypi-fs $BASE_DIR/chroot/usr/share/raspberrypi
 
 #----------------------------------------------------------#
+#                         Chroot                           #
+#----------------------------------------------------------#
+# Chroot to our Debian environment and install
+chroot $BASE_DIR/chroot /bin/bash -x <<'EOF'
+mount none -t proc /proc
+mount none -t sysfs /sys
+mount none -t devpts /dev/pts
+export HOME=/root
+export LC_ALL=C
+apt-get update
+apt-get install dialog dbus --yes --force-yes
+dbus-uuidgen > /var/lib/dbus/machine-id
+
+apt-get --no-install-recommends --yes install linux-image-$KERNEL_VERSION live-boot \
+    net-tools wireless-tools isc-dhcp-client openssh-client dosfstools parted
+
+# Clean up our Debian environment before leaving.
+rm -f /var/lib/dbus/machine-id
+apt-get clean
+rm -rf /tmp/*
+umount -lf /proc
+umount -lf /sys
+umount -lf /dev/pts
+exit
+EOF
+
+#----------------------------------------------------------#
 #                        Clean up                          #
 #----------------------------------------------------------#
+# Unmount dev from the chroot
+umount -lf $BASE_DIR/chroot/dev
+rm $BASE_DIR/chroot/etc/resolv.conf
+
 # Unmount the read/write filesystem
 umount $BASE_DIR/chroot/usr/share/raspberrypi
+
 
