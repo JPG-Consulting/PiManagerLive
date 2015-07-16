@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# Install applications we need to build the environment.
+apt-get --yes install debootstrap syslinux isolinux squashfs-tools genisoimage xorriso memtest86+ rsync wget ca-certificates
+
+#----------------------------------------------------------#
+#                      Configuration                       #
+#----------------------------------------------------------#
+# Defaults
+BASE_DIR="/usr/share/raspbian-live"
+LIVE_ARCH="i386"
+LIVE_DISTRO="jessie"
+
+# Load configuration
+if [ -f /etc/raspbian-live ]; then
+    # Base directory
+    config_var=$(awk '/BASE_DIR=/' /etc/raspbian-live | sed 's/BASE_DIR=//' )
+    if [ -n "$config_var" ];then
+        BASE_DIR="$config_var"
+    fi
+    
+    # Architecture
+    config_var=$(awk '/ARCH=/' /etc/raspbian-live | sed 's/ARCH=//' )
+    if [ -n "$config_var" ];then
+        LIVE_ARCH="$config_var"
+    fi
+
+    # Distro
+    config_var=$(awk '/DISTRO=/' /etc/raspbian-live | sed 's/DISTRO=//' )
+    if [ -n "$config_var" ];then
+        LIVE_DISTRO="$config_var"
+    fi
+fi
+
+# Setup the base Debian environment
+debootstrap --arch=$LIVE_ARCH --variant=minbase $LIVE_DISTRO $BASE_DIR/chroot http://ftp.us.debian.org/debian/
+
+
