@@ -27,7 +27,7 @@ if [ -f $WORKING_DIR/chroot/root/chroot-install.sh ]; then
   rm -rf $WORKING_DIR/chroot/root/chroot-install.sh
 fi
 
-wget https://raw.githubusercontent.com/JPG-Consulting/PiManagerLive/development/chroot-install.sh -o $WORKING_DIR/chroot/root/chroot-install.sh
+wget https://raw.githubusercontent.com/JPG-Consulting/PiManagerLive/development/chroot-install.sh -O $WORKING_DIR/chroot/root/chroot-install.sh
 chown root:root $WORKING_DIR/chroot/root/chroot-install.sh
 chmod +x $WORKING_DIR/chroot/root/chroot-install.sh
 
@@ -43,6 +43,7 @@ KERNEL_VERSION=$(</root/kernel_version)
 # Delete the setup script and kernel version
 rm -f $WORKING_DIR/chroot/root/chroot-install.sh
 rm -f $WORKING_DIR/chroot/root/kernel_version
+
 # Unmount dev from the chroot
 umount -lf $WORKING_DIR/chroot/dev
 
