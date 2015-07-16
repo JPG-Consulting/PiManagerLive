@@ -46,9 +46,22 @@ debootstrap --arch=$LIVE_ARCH --variant=minbase $LIVE_DISTRO $BASE_DIR/chroot ht
 #----------------------------------------------------------#
 #                 Read/Write Filesystem                    #
 #----------------------------------------------------------#
-if [ -f $BASE_DIR/live-rw]; then
-    rm -f $BASE_DIR/live-rw
+if [ -f $BASE_DIR/raspberrypi-fs ]; then
+    rm -f $BASE_DIR/raspberrypi-fs
 fi
 
-dd if=/dev/zero of=$BASE_DIR/live-rw bs=100MB count=1
-mkfs.vfat -F 32 $BASE_DIR/live-rw
+dd if=/dev/zero of=$BASE_DIR/raspberrypi-fs bs=600MB count=1
+mkfs.vfat -F 32 $BASE_DIR/raspberrypi-fs
+
+if [ ! -d $BASE_DIR/chroot/usr/share/raspberrypi ]; then
+    mkdir -p $BASE_DIR/chroot/usr/share/raspberrypi
+fi
+
+mount $BASE_DIR/raspberrypi-fs $BASE_DIR/chroot/usr/share/raspberrypi
+
+#----------------------------------------------------------#
+#                        Clean up                          #
+#----------------------------------------------------------#
+# Unmount the read/write filesystem
+umount $BASE_DIR/chroot/usr/share/raspberrypi
+
