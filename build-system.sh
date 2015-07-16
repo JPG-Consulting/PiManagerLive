@@ -25,9 +25,9 @@ mount -o bind /dev chroot/dev && cp /etc/resolv.conf chroot/etc/resolv.conf
 chroot $WORKING_DIR/chroot
 
 #Set a few required variables and system settings in our Debian environment
-mount -t proc /proc
-moune -t sysfs /sys
-moone -t devpts /dev/pts
+mount none -t proc /proc
+mount none -t sysfs /sys
+mount none -t devpts /dev/pts
 export HOME=/root
 export LC_ALL=C
 apt-get update
@@ -71,10 +71,19 @@ apt-get --no-install-recommends --yes install dosfstools parted openssh-client
 # Development
 apt-get --yes install git-core make gcc
 
+# sudo
+apt-get --yes install sudo 
+
 # Personal option ;)
 apt-get --no-install-recommends --yes install nano
 
+# Add a user
+useradd pi
+adduser pi sudo
+echo -e "raspberry\nraspberry" | (passwd --stdin pi)
 
+# set root password
+echo -e "raspberry\nraspberry" | (passwd --stdin root)
 
 # Save kernel version
 KERNEL_VERSION=$( uname -r )
