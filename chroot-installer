@@ -2,4 +2,4 @@
 
 KERNEL_VERSION=""
 
-apt-get install linux-image-$KERNEL_VERSION 
+apt-get --no-install-recommends --yes install linux-image-$KERNEL_VERSION live-boot
