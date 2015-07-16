@@ -61,9 +61,6 @@ echo -e "raspberry\nraspberry" | (passwd --stdin pi)
 # set root password
 echo -e "raspberry\nraspberry" | (passwd --stdin root)
 
-# Save kernel version
-uname -r > /root/kernel_version
-
 # Clean up our Debian environment before leaving. 
 rm -f /var/lib/dbus/machine-id
 apt-get clean
