@@ -62,7 +62,7 @@ echo -e "raspberry\nraspberry" | (passwd --stdin pi)
 echo -e "raspberry\nraspberry" | (passwd --stdin root)
 
 # Save kernel version
-KERNEL_VERSION=$( uname -r )
+uname -r > /root/kernel_version
 
 # Clean up our Debian environment before leaving. 
 rm -f /var/lib/dbus/machine-id
@@ -72,5 +72,3 @@ rm /etc/resolv.conf
 umount -lf /proc
 umount -lf /sys
 umount -lf /dev/pts
-
-exit
