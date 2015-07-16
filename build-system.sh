@@ -34,6 +34,8 @@ chmod +x $WORKING_DIR/chroot/root/chroot-install.sh
 # Chroot to our Debian environment and install
 chroot $WORKING_DIR/chroot /bin/bash -x <<'EOF'
 /root/chroot-install.sh
+# Save kernel version
+uname -r > /root/kernel_version
 exit
 EOF
 
