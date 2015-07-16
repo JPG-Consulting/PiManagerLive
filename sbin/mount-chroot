@@ -1,0 +1,33 @@
+#!/bin/bash
+
+WORKING_DIR="/usr/src/live_boot"
+
+# A couple of important steps before we chroot
+mount -o bind /dev chroot/dev && cp /etc/resolv.conf chroot/etc/resolv.conf
+
+# Set a few required variables and system settings in our Debian environment
+chroot $WORKING_DIR/chroot /bin/bash -x <<'EOF'
+mount none -t proc /proc
+mount none -t sysfs /sys
+mount none -t devpts /dev/pts
+dbus-uuidgen > /var/lib/dbus/machine-id
+exit
+EOF
+
+# Enter chroot until the user exits
+chroot $WORKING_DIR/chroot
+
+# Clean up our Debian chroot
+chroot $WORKING_DIR/chroot /bin/bash -x <<'EOF'
+rm -f /var/lib/dbus/machine-id
+apt-get clean
+rm -rf /tmp/*
+rm /etc/resolv.conf
+umount -lf /proc
+umount -lf /sys
+umount -lf /dev/pts
+exit
+EOF
+
+# Unmount dev from the chroot
+umount -lf $WORKING_DIR/chroot/dev
