@@ -7,6 +7,7 @@ WORKING_DIR="/usr/src/live_boot"
 
 # Install applications we need to build the environment.
 apt-get --yes install debootstrap syslinux isolinux squashfs-tools genisoimage xorriso memtest86+ rsync
+apt-get --yes install wget ca-certificates
 
 # Use a separate directory for the live environment
 if [ ! -d "$WORKING_DIR" ]; then
@@ -21,86 +22,29 @@ debootstrap --arch=$LIVE_ARCH --variant=minbase $LIVE_DISTRO chroot http://ftp.u
 # A couple of important steps before we chroot
 mount -o bind /dev chroot/dev && cp /etc/resolv.conf chroot/etc/resolv.conf
 
-# Chroot to our Debian environment.
-chroot $WORKING_DIR/chroot
+# Get the setup script
+if [ -f $WORKING_DIR/chroot/root/chroot-install.sh ]; then
+  rm -rf $WORKING_DIR/chroot/root/chroot-install.sh
+fi
 
-#Set a few required variables and system settings in our Debian environment
-mount none -t proc /proc
-mount none -t sysfs /sys
-mount none -t devpts /dev/pts
-export HOME=/root
-export LC_ALL=C
-apt-get update
-apt-get install dialog dbus --yes --force-yes
-dbus-uuidgen > /var/lib/dbus/machine-id
+wget https://raw.githubusercontent.com/JPG-Consulting/PiManagerLive/development/chroot-install.sh -o $WORKING_DIR/chroot/root/chroot-install.sh
+chown root:root $WORKING_DIR/chroot/root/chroot-install.sh
+chmod +x $WORKING_DIR/chroot/root/chroot-install.sh
 
-# Choose your kernel
-kernel_pkgs=($(apt-cache search --names-only '^linux-image-' | awk '{print $1}'))
-
-while true; do
-  echo "Available kernel images"
-  echo "======================="
-  echo ""
-
-  index=1
-  for i in "${kernel_pkgs[@]}"; do
-    echo "$index) $i"
-    index=$(( $index + 1 ))
-  done
-
-  echo ""
-  read -p "Enter selection [1-$(( $index - 1 ))]: " kernel_index
-
-  if [[ $kernel_index =~ ^[0-9]+$ ]]; then
-    if [[ $kernel_index > 0 ]]; then
-      KERNEL_IMAGE=${kernel_pkgs[$(( kernel_index - 1))]}
-      if [ -n "$KERNEL_IMAGE" ]; then
-        break
-      fi
-    fi
-  fi
-done
-
-# Install basic package
-apt-get --no-install-recommends --yes install $KERNEL_IMAGE live-boot
-
-apt-get --no-install-recommends --yes install wget ca-certificates
-
-apt-get --no-install-recommends --yes install dosfstools parted openssh-client
-
-# Development
-apt-get --yes install git-core make gcc
-
-# sudo
-apt-get --yes install sudo 
-
-# Personal option ;)
-apt-get --no-install-recommends --yes install nano
-
-# Add a user
-useradd pi
-adduser pi sudo
-echo -e "raspberry\nraspberry" | (passwd --stdin pi)
-
-# set root password
-echo -e "raspberry\nraspberry" | (passwd --stdin root)
-
-# Save kernel version
-KERNEL_VERSION=$( uname -r )
-
-# Clean up our Debian environment before leaving. 
-rm -f /var/lib/dbus/machine-id
-apt-get clean
-rm -rf /tmp/*
-rm /etc/resolv.conf
-umount -lf /proc
-umount -lf /sys
-umount -lf /dev/pts
-
+# Chroot to our Debian environment and install
+chroot $WORKING_DIR/chroot /bin/bash -x <<'EOF'
+/root/chroot-install.sh
 exit
+EOF
 
+# Get kernel version
+KERNEL_VERSION=$(</root/kernel_version)
+
+# Delete the setup script and kernel version
+rm -f $WORKING_DIR/chroot/root/chroot-install.sh
+rm -f $WORKING_DIR/chroot/root/kernel_version
 # Unmount dev from the chroot
-sudo umount -lf $WORKING_DIR/chroot/dev
+umount -lf $WORKING_DIR/chroot/dev
 
 # Make directories that will be copied to our bootable medium.
 mkdir -p $WORKING_DIR/image/{live,isolinux}
