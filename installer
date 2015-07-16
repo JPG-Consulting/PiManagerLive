@@ -31,6 +31,12 @@ if [ -f /etc/raspbian-live ]; then
     if [ -n "$config_var" ];then
         LIVE_DISTRO="$config_var"
     fi
+    
+    # Kernel version
+    config_var=$(awk '/KERNEL=/' /etc/raspbian-live | sed 's/KERNEL=//' )
+    if [ -n "$config_var" ];then
+        KERNEL_VERSION="$config_var"
+    fi
 fi
 
 #----------------------------------------------------------#
@@ -65,6 +71,19 @@ fi
 mount $BASE_DIR/raspberrypi-fs $BASE_DIR/chroot/usr/share/raspberrypi
 
 #----------------------------------------------------------#
+#               Build the chroot installer                 #
+#----------------------------------------------------------#
+if [ -f $BASE_DIR/chroot/root/installer-chroot ]; then
+    rm $BASE_DIR/chroot/root/installer-chroot
+fi
+
+wget https://raw.githubusercontent.com/JPG-Consulting/PiManagerLive/development/installer-chroot -O $BASE_DIR/chroot/root/installer-chroot
+chown root:root $BASE_DIR/chroot/root/installer-chroot
+chmod +x $BASE_DIR/chroot/root/installer-chroot
+
+sed -i -E 's/^KERNEL_VERSION=.+/KERNEL_VERSION="$KERNEL_VERSION"/' $BASE_DIR/chroot/root/installer-chroot
+
+#----------------------------------------------------------#
 #                         Chroot                           #
 #----------------------------------------------------------#
 # Chroot to our Debian environment and install
@@ -78,8 +97,8 @@ apt-get update
 apt-get install dialog dbus --yes --force-yes
 dbus-uuidgen > /var/lib/dbus/machine-id
 
-apt-get --no-install-recommends --yes install linux-image-$KERNEL_VERSION live-boot \
-    net-tools wireless-tools isc-dhcp-client openssh-client dosfstools parted
+# Call the downloaded installer
+/root/installer-chroot
 
 # Clean up our Debian environment before leaving.
 rm -f /var/lib/dbus/machine-id
@@ -101,4 +120,5 @@ rm $BASE_DIR/chroot/etc/resolv.conf
 # Unmount the read/write filesystem
 umount $BASE_DIR/chroot/usr/share/raspberrypi
 
+rm $BASE_DIR/chroot/root/installer-chroot
 
