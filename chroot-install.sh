@@ -23,12 +23,14 @@ apt-get --yes install git-core make gcc
 
 # sudo
 apt-get --yes install sudo 
+# Remove sudo password.
+sed -i -E 's/^%sudo.+/%sudo ALL=(ALL) NOPASSWD: ALL/' /etc/sudoers
 
 # Personal option ;)
 apt-get --no-install-recommends --yes install nano
 
 # Add a user
-useradd pi
+useradd -m -d /home/pi -s /bin/bash pi
 adduser pi sudo
 echo -e "raspberry\nraspberry\n" | passwd pi
 
