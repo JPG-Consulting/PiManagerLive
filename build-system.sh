@@ -6,7 +6,7 @@ LIVE_DISTRO="jessie"
 WORKING_DIR="/usr/src/live_boot"
 
 # Install applications we need to build the environment.
-apt-get --yes install debootstrap syslinux isolinux squashfs-tools genisoimage memtest86+ rsync
+apt-get --yes install debootstrap syslinux isolinux squashfs-tools genisoimage xorriso memtest86+ rsync
 
 # Use a separate directory for the live environment
 if [ ! -d "$WORKING_DIR" ]; then
@@ -129,6 +129,8 @@ echo "label live-debian-failsafe" >> $WORKING_DIR/image/isolinux/isolinux.cfg
 echo "  menu label ^Debian Live (failsafe)" >> $WORKING_DIR/image/isolinux/isolinux.cfg 
 echo "  kernel /live/vmlinuz" >> $WORKING_DIR/image/isolinux/isolinux.cfg 
 echo "  append initrd=/live/initrd boot=live persistence config memtest noapic noapm nodma nomce nolapic nomodeset nosmp nosplash vga=normal" >> $WORKING_DIR/image/isolinux/isolinux.cfg 
+echo "" >> $WORKING_DIR/image/isolinux/isolinux.cfg 
+echo "endtext" >> $WORKING_DIR/image/isolinux/isolinux.cfg 
 
 cp /usr/lib/ISOLINUX/isolinux.bin $WORKING_DIR/image/isolinux/
 cp /usr/lib/syslinux/modules/bios/hdt.c32 $WORKING_DIR/image/isolinux/
@@ -138,7 +140,9 @@ cp /usr/lib/syslinux/modules/bios/libutil.c32 $WORKING_DIR/image/isolinux/
 cp /usr/lib/syslinux/modules/bios/menu.c32 $WORKING_DIR/image/isolinux/
 
 # Build CD
-cd $WORKING_DIR/image && genisoimage -rational-rock -volid "Debian Live" -cache-inodes -joliet -full-iso9660-filenames -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -output ../debian-live.iso . && cd ..
+cd $WORKING_DIR/image
+genisoimage -rational-rock -volid "Debian Live" -cache-inodes -joliet -full-iso9660-filenames -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -output ../debian-live.iso . && cd ..
+# xorriso -as mkisofs -r -J -joliet-long -l -cache-inodes -isohybrid-mbr /usr/lib/syslinux/isohdpfx.bin -partition_offset 16 -A "Debian Live"  -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -o ../debian-live.iso binary
 
 echo ""
 echo "Done."
