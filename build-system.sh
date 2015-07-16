@@ -22,7 +22,7 @@ cd $WORKING_DIR
 debootstrap --arch=$LIVE_ARCH --variant=minbase $LIVE_DISTRO chroot http://ftp.us.debian.org/debian/
 
 # A couple of important steps before we chroot
-mount -o bind /dev chroot/dev && cp /etc/resolv.conf chroot/etc/resolv.conf
+mount -o bind /dev $WORKING_DIR/chroot/dev && cp /etc/resolv.conf $WORKING_DIR/chroot/etc/resolv.conf
 
 # Get the setup script
 if [ -f $WORKING_DIR/chroot/root/chroot-install.sh ]; then
