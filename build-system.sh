@@ -1,6 +1,6 @@
 #!/bin/bash
 
-KERNEL_VERSION=""
+KERNEL_VERSION="3.16.0-4-586"
 LIVE_ARCH="i386"
 LIVE_DISTRO="jessie"
 WORKING_DIR="/usr/src/live_boot"
@@ -10,9 +10,11 @@ apt-get --yes install debootstrap syslinux isolinux squashfs-tools genisoimage x
 apt-get --yes install wget ca-certificates
 
 # Use a separate directory for the live environment
-if [ ! -d "$WORKING_DIR" ]; then
-  mkdir -p $WORKING_DIR 
+if [ -d "$WORKING_DIR" ]; then
+  rm -rf $WORKING_DIR
 fi
+
+mkdir -p $WORKING_DIR
 
 cd $WORKING_DIR
 
@@ -34,17 +36,11 @@ chmod +x $WORKING_DIR/chroot/root/chroot-install.sh
 # Chroot to our Debian environment and install
 chroot $WORKING_DIR/chroot /bin/bash -x <<'EOF'
 /root/chroot-install.sh
-# Save kernel version
-uname -r > /root/kernel_version
 exit
 EOF
 
-# Get kernel version
-KERNEL_VERSION=$(</root/kernel_version)
-
 # Delete the setup script and kernel version
 rm -f $WORKING_DIR/chroot/root/chroot-install.sh
-rm -f $WORKING_DIR/chroot/root/kernel_version
 
 # Unmount dev from the chroot
 umount -lf $WORKING_DIR/chroot/dev
