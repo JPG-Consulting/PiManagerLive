@@ -19,7 +19,7 @@ apt-get --no-install-recommends --yes install wget ca-certificates
 apt-get --no-install-recommends --yes install dosfstools parted openssh-client
 
 # Development
-apt-get --yes install git-core make gcc
+apt-get --yes install git-core make gcc bc
 
 # sudo
 apt-get --yes install sudo 
@@ -36,6 +36,18 @@ echo -e "raspberry\nraspberry\n" | passwd pi
 
 # set root password
 echo -e "raspberry\nraspberry\n" | passwd root
+
+# Get raspbian sources
+if [ ! -d /usr/src/raspberrypi]; then
+  mkdir /usr/src/raspberrypi
+fi
+
+cd /usr/src/raspberrypi
+git clone -b rpi-3.18.y https://github.com/raspberrypi/linux
+
+# Get toolchain
+cd /usr/src/raspberrypi
+git clone https://github.com/raspberrypi/tools
 
 # Clean up our Debian environment before leaving. 
 rm -f /var/lib/dbus/machine-id
