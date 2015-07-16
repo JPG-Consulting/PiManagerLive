@@ -1,6 +1,9 @@
 #!/bin/bash
 KERNEL_IMAGE="linux-image-3.16.0-4-586"
 
+# Debian packages
+# https://packages.debian.org/stable/
+
 #Set a few required variables and system settings in our Debian environment
 mount none -t proc /proc
 mount none -t sysfs /sys
@@ -13,6 +16,9 @@ dbus-uuidgen > /var/lib/dbus/machine-id
 
 # Install basic package
 apt-get --no-install-recommends --yes install $KERNEL_IMAGE live-boot
+
+# Networking
+apt-get --no-install-recommends --yes install net-tools wireless-tools isc-dhcp-client
 
 apt-get --no-install-recommends --yes install wget ca-certificates
 
@@ -38,16 +44,16 @@ echo -e "raspberry\nraspberry\n" | passwd pi
 echo -e "raspberry\nraspberry\n" | passwd root
 
 # Get raspbian sources
-if [ ! -d /usr/src/raspberrypi]; then
-  mkdir /usr/src/raspberrypi
-fi
+#if [ ! -d /usr/src/raspberrypi]; then
+#  mkdir /usr/src/raspberrypi
+#fi
 
-cd /usr/src/raspberrypi
-git clone -b rpi-3.18.y https://github.com/raspberrypi/linux
+#cd /usr/src/raspberrypi
+#git clone -b rpi-3.18.y https://github.com/raspberrypi/linux
 
 # Get toolchain
-cd /usr/src/raspberrypi
-git clone https://github.com/raspberrypi/tools
+#cd /usr/src/raspberrypi
+#git clone https://github.com/raspberrypi/tools
 
 # Clean up our Debian environment before leaving. 
 rm -f /var/lib/dbus/machine-id
