@@ -30,10 +30,10 @@ apt-get --no-install-recommends --yes install nano
 # Add a user
 useradd pi
 adduser pi sudo
-echo -e "raspberry\nraspberry" | (passwd --stdin pi)
+echo -e "raspberry\nraspberry\n" | passwd pi
 
 # set root password
-echo -e "raspberry\nraspberry" | (passwd --stdin root)
+echo -e "raspberry\nraspberry\n" | passwd root
 
 # Clean up our Debian environment before leaving. 
 rm -f /var/lib/dbus/machine-id
