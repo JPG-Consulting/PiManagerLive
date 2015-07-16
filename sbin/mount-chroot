@@ -3,7 +3,7 @@
 WORKING_DIR="/usr/src/live_boot"
 
 # A couple of important steps before we chroot
-mount -o bind /dev chroot/dev && cp /etc/resolv.conf chroot/etc/resolv.conf
+mount -o bind /dev $WORKING_DIR/chroot/dev && cp /etc/resolv.conf $WORKING_DIR/chroot/etc/resolv.conf
 
 # Set a few required variables and system settings in our Debian environment
 chroot $WORKING_DIR/chroot /bin/bash -x <<'EOF'
