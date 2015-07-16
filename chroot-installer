@@ -1,5 +1,18 @@
 #!/bin/bash
 
-KERNEL_VERSION=""
+KERNEL_VERSION="3.16.0-4-i586"
 
-apt-get --no-install-recommends --yes install linux-image-$KERNEL_VERSION live-boot
+apt-get --no-install-recommends --yes install linux-image-$KERNEL_VERSION live-boot \
+  sudo dosfstools parted rsync net-tools wireless-tools isc-dhcp-client openssh-client \
+  wget ca-certificates git-core make gcc bc nano
+
+# Remove sudo password.
+sed -i -E 's/^%sudo.+/%sudo ALL=(ALL) NOPASSWD: ALL/' /etc/sudoers
+
+# Add a user
+useradd -m -d /home/pi -s /bin/bash pi
+adduser pi sudo
+echo -e "raspberry\nraspberry\n" | passwd pi
+
+# set root password
+echo -e "raspberry\nraspberry\n" | passwd root
