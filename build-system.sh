@@ -83,9 +83,7 @@ cp /usr/lib/syslinux/modules/bios/libutil.c32 $WORKING_DIR/image/isolinux/
 cp /usr/lib/syslinux/modules/bios/menu.c32 $WORKING_DIR/image/isolinux/
 
 # Build CD
-cd $WORKING_DIR/image
-genisoimage -rational-rock -volid "Debian Live" -cache-inodes -joliet -full-iso9660-filenames -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -output ../debian-live.iso . && cd ..
-# xorriso -as mkisofs -r -J -joliet-long -l -cache-inodes -isohybrid-mbr /usr/lib/syslinux/isohdpfx.bin -partition_offset 16 -A "Debian Live"  -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -o ../debian-live.iso binary
+cd $WORKING_DIR && xorriso -as mkisofs -r -J -joliet-long -l -cache-inodes -isohybrid-mbr /usr/lib/ISOLINUX/isohdpfx.bin -partition_offset 16 -A "Debian Live"  -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -o debian-live.iso image
 
 echo ""
 echo "Done."
