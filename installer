@@ -32,7 +32,23 @@ if [ -f /etc/raspbian-live ]; then
     fi
 fi
 
+#----------------------------------------------------------#
+#                    Base environment                      #
+#----------------------------------------------------------#
+# Remove the chroot if it already exists
+if [ -d $BASE_DIR/chroot ]; then
+    rm -rf $BASE_DIR/chroot
+fi
+
 # Setup the base Debian environment
 debootstrap --arch=$LIVE_ARCH --variant=minbase $LIVE_DISTRO $BASE_DIR/chroot http://ftp.us.debian.org/debian/
 
+#----------------------------------------------------------#
+#                 Read/Write Filesystem                    #
+#----------------------------------------------------------#
+if [ -f $BASE_DIR/live-rw]; then
+    rm -f $BASE_DIR/live-rw
+fi
 
+dd if=/dev/zero of=$BASE_DIR/live-rw bs=100MB count=1
+mkfs.vfat -F 32 $BASE_DIR/live-rw
