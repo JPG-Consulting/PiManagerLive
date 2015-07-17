@@ -8,9 +8,9 @@
 KERNEL_VERSION="3.16.0-4-586"
 
 # Read from config
-if [ -f /tmp/raspbian-manager-installer/setup.conf ]; then
+if [ -f /tmp/raspbian-manager-installer/installer.conf ]; then
     # Kernel version
-    config_var=$(awk '/KERNEL=/' /tmp/raspbian-manager-installer/setup.conf | sed 's/KERNEL=//' )
+    config_var=$(awk '/KERNEL=/' /tmp/raspbian-manager-installer/installer.conf | sed 's/KERNEL=//' )
     if [ -n "$config_var" ];then
         KERNEL_VERSION="$config_var"
     fi
