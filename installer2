@@ -45,12 +45,8 @@ EOF
 partition_start=$(fdisk -l /tmp/raspberry-manager.img | awk '/^Device/{p=1;next}; p{gsub(/[^[:digit:]]/, "", $2); print $3}')
 partition_end=$(fdisk -l /tmp/raspberry-manager.img | awk '/^Device/{p=1;next}; p{gsub(/[^[:digit:]]/, "", $2); print $4}')
 
-losetup_start=$(( $partition_start * 512 ))
-losetup_sizelimit=$(( $partition_end * 512 ))
-
-
 # Add partition to loopback driver
-losetup -o $losetup_start --sizelimit $losetup_sizelimit /dev/loop1 /tmp/raspberry-manager.img
+losetup -o $(( $partition_start * 512 )) --sizelimit $(( $partition_end * 512 )) /dev/loop1 /tmp/raspberry-manager.img
 
 # Format the partition
 mkfs.ext4 /dev/loop1
