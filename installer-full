@@ -92,6 +92,10 @@ if [ $? -ne 0 ]; then
 fi
 
 # Download the common chroot installation script
+if [ ! -d /mnt/liveusb/tmp/raspbian-manager-installer ]; then
+    mkdir -p /mnt/liveusb/tmp/raspbian-manager-installer
+fi
+
 wget $GIT_REPOSITORY/$GIT_BRANCH/installer-chroot -O /mnt/liveusb/tmp/raspbian-manager-installer/installer-chroot
 if [ $? -ne 0 ]; then
     loop_device_cleanup
