@@ -26,7 +26,7 @@ function chroot_cleanup()
 # Current working directory
 CWD=$(pwd)
 
-$PACKAGES="linux-image-486 $PACKAGES"
+PACKAGES="linux-image-486 $PACKAGES"
 
 #----------------------------------------------------------#
 #                       Loop Device                        #
