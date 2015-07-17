@@ -1,0 +1,54 @@
+#!/bin/bash
+
+#----------------------------------------------------------#
+#                       Loop Device                        #
+#----------------------------------------------------------#
+if [ $# -eq 0 ]; then
+    IMAGE_FILE=$(pwd)/raspberry-manager.img
+else
+    IMAGE_FILE="$1"
+fi
+
+partition_start=$(fdisk -l /tmp/raspberry-manager.img | awk '/^Device/{p=1;next}; p{gsub(/[^[:digit:]]/, "", $2); print $3}')
+partition_end=$(fdisk -l /tmp/raspberry-manager.img | awk '/^Device/{p=1;next}; p{gsub(/[^[:digit:]]/, "", $2); print $4}')
+
+# Add partition to loopback driver
+losetup -o $(( $partition_start * 512 )) --sizelimit $(( $partition_end * 512 )) /dev/loop1 /tmp/raspberry-manager.img
+
+mount /dev/loop1 /mnt/liveusb
+
+#----------------------------------------------------------#
+#                          Chroot                          #
+#----------------------------------------------------------#
+# A couple of important steps before we chroot
+mount -o bind /dev /mnt/liveusb/dev
+cp /etc/resolv.conf/mnt/liveusb/etc/resolv.conf
+
+# Set a few required variables and system settings in our Debian environment
+chroot /mnt/liveusb /bin/bash -x <<'EOF'
+mount none -t proc /proc
+mount none -t sysfs /sys
+mount none -t devpts /dev/pts
+exit
+EOF
+
+# Enter chroot until the user exits
+chroot /mnt/liveusb
+
+# Clean up our Debian chroot
+chroot /mnt/liveusb /bin/bash -x <<'EOF'
+rm -f /var/lib/dbus/machine-id
+apt-get clean
+umount -lf /proc
+umount -lf /sys
+umount -lf /dev/pts
+exit
+EOF
+
+# Unmount dev from the chroot
+umount -lf /mnt/liveusb/dev
+rm /mnt/liveusb/etc/resolv.conf
+rm -rf /mnt/liveusb/tmp/*
+
+umount /mnt/live/usb
+losetup -d /dev/loop1
