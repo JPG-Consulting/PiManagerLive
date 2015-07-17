@@ -1,0 +1,80 @@
+#!/bin/bash
+
+CWD=$(pwd)
+
+#----------------------------------------------------------#
+#                      Configuration                       #
+#----------------------------------------------------------#
+# Defaults
+BASE_DIR="/usr/share/raspbian-live"
+KERNEL_VERSION="3.16.0-4-586"
+
+# Load configuration
+if [ -f /etc/raspbian-live ]; then
+    # Base directory
+    config_var=$(awk '/BASE_DIR=/' /etc/raspbian-live | sed 's/BASE_DIR=//' )
+    if [ -n "$config_var" ];then
+        BASE_DIR="$config_var"
+    fi
+
+    # Kernel version
+    config_var=$(awk '/KERNEL=/' /etc/raspbian-live | sed 's/KERNEL=//' )
+    if [ -n "$config_var" ];then
+        KERNEL_VERSION="$config_var"
+    fi
+fi
+
+#----------------------------------------------------------#
+#                 CD/USB Image creation                    #
+#----------------------------------------------------------#
+# Make directories that will be copied to our bootable medium.
+mkdir -p $BASE_DIR/image/{live,isolinux}
+
+# Compress the chroot environment into a Squash filesystem.
+mksquashfs $BASE_DIR/chroot $BASE_DIR/image/live/filesystem.squashfs -e boot
+
+# Prepare our USB/CD bootloader. 
+cp $BASE_DIR/chroot/boot/vmlinuz-$KERNEL_VERSION $BASE_DIR/image/live/vmlinuz
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to copy kernel image."
+    exit 1
+fi
+
+cp $BASE_DIR/chroot/boot/initrd.img-$KERNEL_VERSION $BASE_DIR/image/live/initrd
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to copy initrd."
+    exit 1
+fi
+
+echo "UI menu.c32" > $BASE_DIR/image/isolinux/isolinux.cfg 
+echo "" >> $BASE_DIR/image/isolinux/isolinux.cfg 
+echo "prompt 0" >> $BASE_DIR/image/isolinux/isolinux.cfg 
+echo "menu title Debian Live" >> $BASE_DIR/image/isolinux/isolinux.cfg 
+echo "" >> $BASE_DIR/image/isolinux/isolinux.cfg 
+echo "timeout 300" >> $BASE_DIR/image/isolinux/isolinux.cfg 
+echo "" >> $BASE_DIR/image/isolinux/isolinux.cfg 
+echo "label live-debian" >> $BASE_DIR/image/isolinux/isolinux.cfg 
+echo "  menu label ^Debian Live" >> $BASE_DIR/image/isolinux/isolinux.cfg 
+echo "  menu default" >> $BASE_DIR/image/isolinux/isolinux.cfg 
+echo "  kernel /live/vmlinuz" >> $BASE_DIR/image/isolinux/isolinux.cfg 
+echo "  append initrd=/live/initrd boot=live persistence quiet" >> $BASE_DIR/image/isolinux/isolinux.cfg 
+echo "" >> $BASE_DIR/image/isolinux/isolinux.cfg 
+echo "label live-debian-failsafe" >> $BASE_DIR/image/isolinux/isolinux.cfg 
+echo "  menu label ^Debian Live (failsafe)" >> $BASE_DIR/image/isolinux/isolinux.cfg 
+echo "  kernel /live/vmlinuz" >> $BASE_DIR/image/isolinux/isolinux.cfg 
+echo "  append initrd=/live/initrd boot=live persistence config memtest noapic noapm nodma nomce nolapic nomodeset nosmp nosplash vga=normal" >> $BASE_DIR/image/isolinux/isolinux.cfg 
+echo "" >> $BASE_DIR/image/isolinux/isolinux.cfg 
+echo "endtext" >> $BASE_DIR/image/isolinux/isolinux.cfg 
+
+cp /usr/lib/ISOLINUX/isolinux.bin $BASE_DIR/image/isolinux/
+cp /usr/lib/syslinux/modules/bios/hdt.c32 $BASE_DIR/image/isolinux/
+cp /usr/lib/syslinux/modules/bios/ldlinux.c32 $BASE_DIR/image/isolinux/
+cp /usr/lib/syslinux/modules/bios/libcom32.c32 $BASE_DIR/image/isolinux/
+cp /usr/lib/syslinux/modules/bios/libutil.c32 $BASE_DIR/image/isolinux/
+cp /usr/lib/syslinux/modules/bios/menu.c32 $BASE_DIR/image/isolinux/
+
+# Build CD
+cd $BASE_DIR && xorriso -as mkisofs -r -J -joliet-long -l -cache-inodes -isohybrid-mbr /usr/lib/ISOLINUX/isohdpfx.bin -partition_offset 16 -A "Debian Live"  -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -o debian-live.iso image
+
+mv $BASE_DIR/debian-live.iso $CWD/debian-live.iso
+rm -rf $BASE_DIR/image
