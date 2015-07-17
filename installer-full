@@ -70,8 +70,8 @@ partition_end=$(fdisk -l /tmp/raspberry-manager.img | awk '/^Device/{p=1;next}; 
 # Add partition to loopback driver
 losetup -o $(( $partition_start * 512 )) --sizelimit $(( $partition_end * 512 )) /dev/loop1 /tmp/raspberry-manager.img
 
-# Format the partition
-mkfs.ext4 /dev/loop1
+# Format the partition (ext3 or ext2)
+mkfs.ext3 /dev/loop1
 
 # Mount the partition
 if [ ! -d /mnt/liveusb ]; then
