@@ -1,0 +1,50 @@
+#!/bin/bash
+
+#----------------------------------------------------------#
+#                      Configuration                       #
+#----------------------------------------------------------#
+# Defaults
+BASE_DIR="/usr/share/raspbian-live"
+
+# Load configuration
+if [ -f /etc/raspbian-live ]; then
+    # Base directory
+    config_var=$(awk '/BASE_DIR=/' /etc/raspbian-live | sed 's/BASE_DIR=//' )
+    if [ -n "$config_var" ];then
+        BASE_DIR="$config_var"
+    fi
+fi
+
+#----------------------------------------------------------#
+#                          Chroot                          #
+#----------------------------------------------------------#
+# A couple of important steps before we chroot
+mount -o bind /dev $BASE_DIR/chroot/dev
+cp /etc/resolv.conf $BASE_DIR/chroot/etc/resolv.conf
+
+# Set a few required variables and system settings in our Debian environment
+chroot $BASE_DIR/chroot /bin/bash -x <<'EOF'
+mount none -t proc /proc
+mount none -t sysfs /sys
+mount none -t devpts /dev/pts
+dbus-uuidgen > /var/lib/dbus/machine-id
+exit
+EOF
+
+# Enter chroot until the user exits
+chroot $BASE_DIR/chroot
+
+# Clean up our Debian chroot
+chroot $BASE_DIR/chroot /bin/bash -x <<'EOF'
+rm -f /var/lib/dbus/machine-id
+apt-get clean
+rm -rf /tmp/*
+umount -lf /proc
+umount -lf /sys
+umount -lf /dev/pts
+exit
+EOF
+
+# Unmount dev from the chroot
+umount -lf $BASE_DIR/chroot/dev
+rm $BASE_DIR/etc/resolv.conf
