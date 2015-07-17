@@ -124,6 +124,9 @@ mount none -t sysfs /sys
 mount none -t devpts /dev/pts
 export HOME=/root
 export LC_ALL=C
+apt-get update
+apt-get install dialog dbus --yes --force-yes
+dbus-uuidgen > /var/lib/dbus/machine-id
 /tmp/raspbian-manager-installer/installer-chroot
 exit
 EOF
@@ -137,6 +140,7 @@ exit
 EOF
 
 chroot /mnt/liveusb /bin/bash -x <<'EOF'
+rm -f /var/lib/dbus/machine-id
 apt-get clean
 umount -lf /proc
 umount -lf /sys
