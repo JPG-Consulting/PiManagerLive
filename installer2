@@ -11,14 +11,20 @@ function loop_device_cleanup()
     
     # Delete loop device
     losetup -d /dev/loop1
-    
-    # Delete image file
-    rm /tmp/raspberry-manager.img
 }
 
+function chroot_cleanup()
+{
+    # Unmount dev from the chroot
+    umount -lf /mnt/liveusb/dev
+    rm /mnt/liveusb/etc/resolv.conf
+    rm -rf /mnt/liveusb/tmp/*
+}
           
 # Current working directory
 CWD=$(pwd)
+
+$PACKAGES="linux-image-486 $PACKAGES"
 
 #----------------------------------------------------------#
 #                       Loop Device                        #
@@ -69,7 +75,37 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+# A couple of important steps before we chroot
+mount -o bind /dev /mnt/liveusb/dev
+cp /etc/resolv.conf /mnt/liveusb/etc/resolv.conf
+
+chroot /mnt/liveusb /bin/bash -x <<'EOF'
+mount none -t proc /proc
+mount none -t sysfs /sys
+mount none -t devpts /dev/pts
+export HOME=/root
+export LC_ALL=C
+exit
+EOF
+
+chroot /mnt/liveusb /bin/bash -x <<'EOF'
+useradd -m -d /home/pi -s /bin/bash pi
+adduser pi sudo
+echo -e "raspberry\nraspberry\n" | passwd pi
+echo -e "raspberry\nraspberry\n" | passwd root
+exit
+EOF
+
+chroot /mnt/liveusb /bin/bash -x <<'EOF'
+apt-get clean
+umount -lf /proc
+umount -lf /sys
+umount -lf /dev/pts
+exit
+EOF
+
 # Cleanup
+chroot_cleanup
 loop_device_cleanup
 
 # Move the image file
