@@ -85,7 +85,7 @@ fi
 mount /dev/loop1 /mnt/liveusb
 
 # Install applications we need to build the environment.
-apt-get --yes install debootstrap  rsync wget ca-certificates
+apt-get --yes install debootstrap kpartx rsync wget ca-certificates
 
 # Setup the base Debian environment
 debootstrap --arch=i386 --variant=minbase $SUITE /mnt/liveusb $MIRROR
