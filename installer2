@@ -35,8 +35,11 @@ losetup -o $losetup_start --sizelimit $losetup_sizelimit /dev/loop1 /tmp/raspber
 mkfs.ext4 /dev/loop1
 
 # Mount the partition
-mkdir /mnt/liveusb
-mount /dev/loop3 /mnt/liveusb
+if [ ! -d /mnt/liveusb ]; then
+  mkdir /mnt/liveusb
+fi
+
+mount /dev/loop1 /mnt/liveusb
 
 # Cleanup
 # Unmount
