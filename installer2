@@ -5,6 +5,8 @@ MIRROR="http://ftp.us.debian.org/debian/"
 BASE_PACKAGES="bc ca-certificates dosfstools gcc git-core ifupdown isc-dhcp-client 
                locales-all make nano net-tools openssh-client parted rsync sudo wget 
                wireless-tools"
+GIT_REPOSITORY="https://raw.githubusercontent.com/JPG-Consulting/PiManagerLive"
+GIT_BRANCH="development"
 
 function loop_device_cleanup()
 {
@@ -119,3 +121,13 @@ loop_device_cleanup
 
 # Move the image file
 mv /tmp/raspberry-manager.img $CWD
+
+#----------------------------------------------------------#
+#                 Install helper scripts                   #
+#----------------------------------------------------------#
+
+if [ -f $CWD/chroot-live-usb ]; then
+    rm $CWD/chroot-live-usb
+fi
+wget $GIT_REPOSITORY/$GIT_BRANCH/scripts/chroot-live-usb -O $CWD/chroot-live-usb
+chmod +x $CWD/chroot-live-usb
