@@ -53,5 +53,5 @@ rm -rf /mnt/liveusb/tmp/*
 #----------------------------------------------------------#
 #                 Clean up loop device                     #
 #----------------------------------------------------------#
-umount /mnt/live/usb
+umount /mnt/liveusb
 losetup -d /dev/loop1
