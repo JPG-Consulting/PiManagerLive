@@ -9,11 +9,11 @@ else
     IMAGE_FILE="$1"
 fi
 
-partition_start=$(fdisk -l /tmp/raspberry-manager.img | awk '/^Device/{p=1;next}; p{gsub(/[^[:digit:]]/, "", $2); print $3}')
-partition_end=$(fdisk -l /tmp/raspberry-manager.img | awk '/^Device/{p=1;next}; p{gsub(/[^[:digit:]]/, "", $2); print $4}')
+partition_start=$(fdisk -l $IMAGE_FILE | awk '/^Device/{p=1;next}; p{gsub(/[^[:digit:]]/, "", $2); print $3}')
+partition_end=$(fdisk -l $IMAGE_FILE | awk '/^Device/{p=1;next}; p{gsub(/[^[:digit:]]/, "", $2); print $4}')
 
 # Add partition to loopback driver
-losetup -o $(( $partition_start * 512 )) --sizelimit $(( $partition_end * 512 )) /dev/loop1 /tmp/raspberry-manager.img
+losetup -o $(( $partition_start * 512 )) --sizelimit $(( $partition_end * 512 )) /dev/loop1 $IMAGE_FILE
 
 mount /dev/loop1 /mnt/liveusb
 
