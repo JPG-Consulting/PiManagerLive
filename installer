@@ -70,7 +70,7 @@ fi
 chown root:root $BASE_DIR/chroot/root/installer-chroot
 chmod +x $BASE_DIR/chroot/root/installer-chroot
 
-sed -i -E 's/^KERNEL_VERSION=.+/KERNEL_VERSION="$KERNEL_VERSION"/' $BASE_DIR/chroot/root/installer-chroot
+sed -i -E "s/^KERNEL_VERSION=.+/KERNEL_VERSION=\"$KERNEL_VERSION\"/" $BASE_DIR/chroot/root/installer-chroot
 
 # A couple of important steps before we chroot
 mount -o bind /dev $BASE_DIR/chroot/dev
