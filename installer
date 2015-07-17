@@ -186,6 +186,17 @@ cd $BASE_DIR && xorriso -as mkisofs -r -J -joliet-long -l -cache-inodes -isohybr
 mv $BASE_DIR/debian-live.iso $CWD/debian-live.iso
 rm -rf $BASE_DIR/image
 
+#----------------------------------------------------------#
+#                Install helper scripts                    #
+#----------------------------------------------------------#
+if [ -f /usr/sbin/chroot-live ]; then
+    rm /usr/sbin/chroot-live
+fi
+
+wget https://raw.githubusercontent.com/JPG-Consulting/PiManagerLive/development/sbin/chroot-live -O /usr/sbin/chroot-live
+chmod +x /usr/sbin/chroot-live
+chown root:root /usr/sbin/chroot-live
+
 echo ""
 echo "Done."
 echo ""
