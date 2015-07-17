@@ -2,9 +2,6 @@
 
 SUITE="jessie"
 MIRROR="http://ftp.us.debian.org/debian/"
-BASE_PACKAGES="bc ca-certificates dosfstools gcc git-core ifupdown isc-dhcp-client 
-               locales-all make nano net-tools openssh-client parted rsync sudo wget 
-               wireless-tools"
 GIT_REPOSITORY="https://raw.githubusercontent.com/JPG-Consulting/PiManagerLive"
 GIT_BRANCH="development"
 
@@ -29,6 +26,21 @@ function chroot_cleanup()
 CWD=$(pwd)
 
 PACKAGES="linux-image-486 $PACKAGES"
+
+#----------------------------------------------------------#
+#                      Configuration                       #
+#----------------------------------------------------------#
+
+# Load configuration
+if [ -f /tmp/raspbian-manager-installer/installer.conf ]; then
+
+    # Suite/Distro
+    config_var=$(awk '/SUITE=/' /tmp/raspbian-manager-installer/installer.conf | sed 's/SUITE=//' )
+    if [ -n "$config_var" ];then
+        SUITE="$config_var"
+    fi
+
+fi
 
 #----------------------------------------------------------#
 #                       Loop Device                        #
@@ -72,12 +84,23 @@ mount /dev/loop1 /mnt/liveusb
 apt-get --yes install debootstrap  rsync wget ca-certificates
 
 # Setup the base Debian environment
-debootstrap --include="$BASE_PACKAGES" --arch=i386 --variant=minbase $SUITE /mnt/liveusb $MIRROR
+debootstrap --arch=i386 --variant=minbase $SUITE /mnt/liveusb $MIRROR
 if [ $? -ne 0 ]; then
     loop_device_cleanup
     echo "Error: Unable to debootstrap"
     exit 1
 fi
+
+# Download the common chroot installation script
+wget $GIT_REPOSITORY/$GIT_BRANCH/installer-chroot -O /mnt/liveusb/tmp/raspbian-manager-installer/installer-chroot
+if [ $? -ne 0 ]; then
+    loop_device_cleanup
+    echo "Error: Unable to download chroot environment installer."
+    exit 1
+fi
+
+chown root:root /mnt/liveusb/tmp/raspbian-manager-installer/installer-chroot
+chmod +x /mnt/liveusb/tmp/raspbian-manager-installer/installer-chroot
 
 # A couple of important steps before we chroot
 mount -o bind /dev /mnt/liveusb/dev
@@ -89,17 +112,11 @@ mount none -t sysfs /sys
 mount none -t devpts /dev/pts
 export HOME=/root
 export LC_ALL=C
+/mnt/liveusb/tmp/raspbian-manager-installer/installer-chroot
 exit
 EOF
 
-chroot /mnt/liveusb /bin/bash -x <<'EOF'
-useradd -m -d /home/pi -s /bin/bash pi
-adduser pi sudo
-echo -e "raspberry\nraspberry\n" | passwd pi
-echo -e "raspberry\nraspberry\n" | passwd root
-exit
-EOF
-
+# Chroot specific settings for full install
 chroot /mnt/liveusb /bin/bash -x <<'EOF'
 apt-get --yes install grub
 grub-install /dev/loop1
