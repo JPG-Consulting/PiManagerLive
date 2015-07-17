@@ -9,6 +9,15 @@ GIT_URL_RAW="https://raw.githubusercontent.com/JPG-Consulting/PiManagerLive"
 GIT_BRANCH="development"
 
 #----------------------------------------------------------#
+#         Initialize temp folder for installer             #
+#----------------------------------------------------------#
+if [ -d /tmp/raspbian-manager-installer ]; then
+    rm -rf /tmp/raspbian-manager-installer
+fi
+
+mkdir -p /tmp/raspbian-manager-installer
+
+#----------------------------------------------------------#
 #                     Script prompt                        #
 #----------------------------------------------------------#
 if [ $(dpkg-query -W -f='${Status}' whiptail 2>/dev/null | grep -c "ok installed") -eq 0 ];
@@ -96,10 +105,6 @@ fi
 if [ -z "$INSTALLER_SCRIPT" ]; then
     echo "Error: No installer script was selected."
     exit 1
-fi
-
-if [ ! -d /tmp/raspbian-manager-installer ]; then
-    mkdir -p /tmp/raspbian-manager-installer
 fi
 
 wget $GIT_URL_RAW/$GIT_BRANCH/installer-$INSTALLER_SCRIPT -O /tmp/raspbian-manager-installer/installer-$INSTALLER_SCRIPT
