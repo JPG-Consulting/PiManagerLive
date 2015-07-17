@@ -1,7 +1,28 @@
 #!/bin/bash
 
+SUITE="jessie"
+MIRROR="http://ftp.us.debian.org/debian/"
+BASE_PACKAGES="ca-certificates ifupdown isc-dhcp-client locales-all parted rsync sudo"
+
+function loop_device_cleanup()
+{
+    # Unmount
+    umount /mnt/liveusb
+    
+    # Delete loop device
+    losetup -d /dev/loop1
+    
+    # Delete image file
+    rm /tmp/raspberry-manager.img
+}
+
+          
 # Current working directory
 CWD=$(pwd)
+
+#----------------------------------------------------------#
+#                       Loop Device                        #
+#----------------------------------------------------------#
 
 # Create the initial image file (700MB)
 if [ -f /tmp/raspberry-manager.img ]; then
@@ -45,12 +66,15 @@ mount /dev/loop1 /mnt/liveusb
 apt-get --yes install debootstrap  rsync wget ca-certificates
 
 # Setup the base Debian environment
-debootstrap --arch=i386 --variant=minbase jessie /mnt/liveusb http://ftp.us.debian.org/debian/
+debootstrap --include="$BASE_PACKAGES" --arch=i386 --variant=minbase $SUITE /mnt/liveusb $MIRROR
+if [ $? -ne 0 ]; then
+    loop_device_cleanup
+    echo "Error: Unable to debootstrap"
+    exit 1
+fi
 
 # Cleanup
-# Unmount
-umount /mnt/liveusb
-# Delete loop device
-losetup -d /dev/loop1
+loop_device_cleanup
 
+# Move the image file
 mv /tmp/raspberry-manager.img $CWD
