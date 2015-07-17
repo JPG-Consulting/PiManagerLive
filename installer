@@ -72,27 +72,27 @@ LIVE_DISTRO="jessie"
 KERNEL_IMAGE="3.16.0-4-586"
 
 # Load configuration
-if [ -f /etc/raspbian-live ]; then
+if [ -f /tmp/raspbian-manager-installer/installer.conf ]; then
     # Base directory
-    config_var=$(awk '/BASE_DIR=/' /etc/raspbian-live | sed 's/BASE_DIR=//' )
+    config_var=$(awk '/BASE_DIR=/' /tmp/raspbian-manager-installer/installer.conf | sed 's/BASE_DIR=//' )
     if [ -n "$config_var" ];then
         BASE_DIR="$config_var"
     fi
     
     # Architecture
-    config_var=$(awk '/ARCH=/' /etc/raspbian-live | sed 's/ARCH=//' )
+    config_var=$(awk '/ARCH=/' /tmp/raspbian-manager-installer/installer.conf | sed 's/ARCH=//' )
     if [ -n "$config_var" ];then
         LIVE_ARCH="$config_var"
     fi
 
     # Distro
-    config_var=$(awk '/DISTRO=/' /etc/raspbian-live | sed 's/DISTRO=//' )
+    config_var=$(awk '/DISTRO=/' /tmp/raspbian-manager-installer/installer.conf | sed 's/DISTRO=//' )
     if [ -n "$config_var" ];then
         LIVE_DISTRO="$config_var"
     fi
     
     # Kernel version
-    config_var=$(awk '/KERNEL=/' /etc/raspbian-live | sed 's/KERNEL=//' )
+    config_var=$(awk '/KERNEL=/' /tmp/raspbian-manager-installer/installer.conf | sed 's/KERNEL=//' )
     if [ -n "$config_var" ];then
         KERNEL_VERSION="$config_var"
     fi
