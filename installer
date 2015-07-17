@@ -192,10 +192,16 @@ rm -rf $BASE_DIR/image
 if [ -f /usr/sbin/chroot-live ]; then
     rm /usr/sbin/chroot-live
 fi
-
 wget https://raw.githubusercontent.com/JPG-Consulting/PiManagerLive/development/sbin/chroot-live -O /usr/sbin/chroot-live
 chmod +x /usr/sbin/chroot-live
 chown root:root /usr/sbin/chroot-live
+
+if [ -f /usr/sbin/build-live-image ]; then
+    rm /usr/sbin/build-live-image
+fi
+wget https://raw.githubusercontent.com/JPG-Consulting/PiManagerLive/development/sbin/build-live-image -O /usr/sbin/build-live-image
+chmod +x /usr/sbin/build-live-image
+chown root:root /usr/sbin/build-live-image
 
 echo ""
 echo "Done."
