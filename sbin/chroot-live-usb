@@ -22,7 +22,7 @@ mount /dev/loop1 /mnt/liveusb
 #----------------------------------------------------------#
 # A couple of important steps before we chroot
 mount -o bind /dev /mnt/liveusb/dev
-cp /etc/resolv.conf/mnt/liveusb/etc/resolv.conf
+cp /etc/resolv.conf /mnt/liveusb/etc/resolv.conf
 
 # Set a few required variables and system settings in our Debian environment
 chroot /mnt/liveusb /bin/bash -x <<'EOF'
