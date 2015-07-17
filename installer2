@@ -2,7 +2,9 @@
 
 SUITE="jessie"
 MIRROR="http://ftp.us.debian.org/debian/"
-BASE_PACKAGES="ca-certificates ifupdown isc-dhcp-client locales-all parted rsync sudo"
+BASE_PACKAGES="bc ca-certificates dosfstools gcc git-core ifupdown isc-dhcp-client 
+               locales-all make nano net-tools openssh-client parted rsync sudo wget 
+               wireless-tools"
 
 function loop_device_cleanup()
 {
@@ -93,6 +95,13 @@ useradd -m -d /home/pi -s /bin/bash pi
 adduser pi sudo
 echo -e "raspberry\nraspberry\n" | passwd pi
 echo -e "raspberry\nraspberry\n" | passwd root
+exit
+EOF
+
+chroot /mnt/liveusb /bin/bash -x <<'EOF'
+apt-get --yes install grub
+grub-install /dev/loop1
+update-grub
 exit
 EOF
 
