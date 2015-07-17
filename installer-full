@@ -124,7 +124,7 @@ mount none -t sysfs /sys
 mount none -t devpts /dev/pts
 export HOME=/root
 export LC_ALL=C
-/mnt/liveusb/tmp/raspbian-manager-installer/installer-chroot
+/tmp/raspbian-manager-installer/installer-chroot
 exit
 EOF
 
