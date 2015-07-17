@@ -51,6 +51,26 @@ fi
 
 # Setup the base Debian environment
 debootstrap --arch=$LIVE_ARCH --variant=minbase $LIVE_DISTRO $BASE_DIR/chroot http://ftp.us.debian.org/debian/
+if [ $? -ne 0 ]; then
+    echo "Error: debootstrap failed."
+    exit 1
+fi
+
+# Chroot installer
+if [ -f $BASE_DIR/chroot/root/installer-chroot ]; then
+    rm $BASE_DIR/chroot/root/installer-chroot
+fi
+
+wget https://raw.githubusercontent.com/JPG-Consulting/PiManagerLive/development/installer-chroot -O $BASE_DIR/chroot/root/installer-chroot
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to download chroot installer."
+    exit 1
+fi
+
+chown root:root $BASE_DIR/chroot/root/installer-chroot
+chmod +x $BASE_DIR/chroot/root/installer-chroot
+
+sed -i -E 's/^KERNEL_VERSION=.+/KERNEL_VERSION="$KERNEL_VERSION"/' $BASE_DIR/chroot/root/installer-chroot
 
 # A couple of important steps before we chroot
 mount -o bind /dev $BASE_DIR/chroot/dev
@@ -71,19 +91,6 @@ if [ ! -d $BASE_DIR/chroot/usr/share/raspberrypi ]; then
 fi
 
 mount $BASE_DIR/raspberrypi-fs $BASE_DIR/chroot/usr/share/raspberrypi
-
-#----------------------------------------------------------#
-#               Build the chroot installer                 #
-#----------------------------------------------------------#
-if [ -f $BASE_DIR/chroot/root/installer-chroot ]; then
-    rm $BASE_DIR/chroot/root/installer-chroot
-fi
-
-wget https://raw.githubusercontent.com/JPG-Consulting/PiManagerLive/development/installer-chroot -O $BASE_DIR/chroot/root/installer-chroot
-chown root:root $BASE_DIR/chroot/root/installer-chroot
-chmod +x $BASE_DIR/chroot/root/installer-chroot
-
-sed -i -E 's/^KERNEL_VERSION=.+/KERNEL_VERSION="$KERNEL_VERSION"/' $BASE_DIR/chroot/root/installer-chroot
 
 #----------------------------------------------------------#
 #                         Chroot                           #
@@ -135,7 +142,16 @@ mksquashfs $BASE_DIR/chroot $BASE_DIR/image/live/filesystem.squashfs -e boot
 
 # Prepare our USB/CD bootloader. 
 cp $BASE_DIR/chroot/boot/vmlinuz-$KERNEL_VERSION $BASE_DIR/image/live/vmlinuz
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to copy kernel image."
+    exit 1
+fi
+
 cp $BASE_DIR/chroot/boot/initrd.img-$KERNEL_VERSION $BASE_DIR/image/live/initrd
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to copy initrd."
+    exit 1
+fi
 
 echo "UI menu.c32" > $BASE_DIR/image/isolinux/isolinux.cfg 
 echo "" >> $BASE_DIR/image/isolinux/isolinux.cfg 
