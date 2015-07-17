@@ -1,0 +1,121 @@
+#!/bin/bash
+
+#----------------------------------------------------------#
+#                 Environment variables                    #
+#----------------------------------------------------------#
+CWD=$(pwd)
+
+GIT_URL_RAW="https://raw.githubusercontent.com/JPG-Consulting/PiManagerLive"
+GIT_BRANCH="development"
+
+#----------------------------------------------------------#
+#                     Script prompt                        #
+#----------------------------------------------------------#
+if [ $(dpkg-query -W -f='${Status}' whiptail 2>/dev/null | grep -c "ok installed") -eq 0 ];
+then
+    apt-get --yes -qq install whiptail
+fi
+
+choice=$(whiptail --title "Filesystem" --menu "Choose an option" 22 78 16 \
+    "Full" "Create a full install image for USB" \
+    "Live" "Create a live CD/USB image." 3>&2 2>&1 1>&3)
+
+# Change to lower case and remove spaces.
+option=$(echo $choice | tr '[:upper:]' '[:lower:]' | sed 's/ //g')
+case "${option}" in
+    full) 
+        INSTALLER_SCRIPT="full"
+        ;;
+    live)
+        INSTALLER_SCRIPT="live"
+        ;;
+    *)
+        exit
+        ;;
+esac
+
+#----------------------------------------------------------#
+#               Install required packages                  #
+#----------------------------------------------------------#
+
+installer_packages="debootstrap syslinux isolinux squashfs-tools genisoimage xorriso memtest86+ rsync wget ca-certificates"
+install_packages=""
+
+for package in "${installer_packages[@]}"
+do
+    if [ $(dpkg-query -W -f='${Status}' $package 2>/dev/null | grep -c "ok installed") -eq 0 ];
+    then
+        install_packages="$package $install_packages"
+    fi
+done
+
+if [ -n $install_packages ]; then
+    apt-get --yes -qq install $install_packages
+fi
+
+#----------------------------------------------------------#
+#                      Configuration                       #
+#----------------------------------------------------------#
+# Defaults
+BASE_DIR="/usr/share/raspbian-live"
+LIVE_ARCH="i386"
+LIVE_DISTRO="jessie"
+KERNEL_IMAGE="3.16.0-4-586"
+
+# Load configuration
+if [ -f /etc/raspbian-live ]; then
+    # Base directory
+    config_var=$(awk '/BASE_DIR=/' /etc/raspbian-live | sed 's/BASE_DIR=//' )
+    if [ -n "$config_var" ];then
+        BASE_DIR="$config_var"
+    fi
+    
+    # Architecture
+    config_var=$(awk '/ARCH=/' /etc/raspbian-live | sed 's/ARCH=//' )
+    if [ -n "$config_var" ];then
+        LIVE_ARCH="$config_var"
+    fi
+
+    # Distro
+    config_var=$(awk '/DISTRO=/' /etc/raspbian-live | sed 's/DISTRO=//' )
+    if [ -n "$config_var" ];then
+        LIVE_DISTRO="$config_var"
+    fi
+    
+    # Kernel version
+    config_var=$(awk '/KERNEL=/' /etc/raspbian-live | sed 's/KERNEL=//' )
+    if [ -n "$config_var" ];then
+        KERNEL_VERSION="$config_var"
+    fi
+fi
+
+#----------------------------------------------------------#
+#                  Download the installer                  #
+#----------------------------------------------------------#
+# Make sure we've got a installer script
+if [ -z "$INSTALLER_SCRIPT" ]; then
+    echo "Error: No installer script was selected."
+    exit 1
+fi
+
+if [ ! -d /tmp/raspbian-manager-installer ]; then
+    mkdir -p /tmp/raspbian-manager-installer
+fi
+
+wget $GIT_URL_RAW/$GIT_BRANCH/installer-$INSTALLER_SCRIPT -O /tmp/raspbian-manager-installer/installer-$INSTALLER_SCRIPT
+if [ $? -ne 0 ]; then
+    echo "Error: Unable to download the installer script"
+    exit 1
+fi
+
+chmod +x /tmp/raspbian-manager-installer/installer-$INSTALLER_SCRIPT
+
+/tmp/raspbian-manager-installer/installer-$INSTALLER_SCRIPT
+if [ $? -ne 0 ]; then
+    echo "Error: Installation failed"
+    exit 1
+fi
+
+rm -rf /tmp/raspbian-manager-installer
+
+echo "Done."
