@@ -45,6 +45,6 @@ mount /dev/loop1 /mnt/liveusb
 # Unmount
 umount /mnt/liveusb
 # Delete loop device
-losetup -l /dev/loop1
+losetup -d /dev/loop1
 
 mv /tmp/raspberry-manager.img $CWD
