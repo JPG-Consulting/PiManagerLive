@@ -5,8 +5,15 @@ CWD=$(pwd)
 
 # Working directory
 BASE_DIR="/tmp/raspberrypi"
+if [ ! -d $BASE_DIR ]; then
+  mkdir -p $BASE_DIR
+fi
 
 # Create the initial image file (700MB)
+if [ -f $BASE_DIR/raspberry-manager.img ]; then
+  rm $BASE_DIR/raspberry-manager.img
+fi
+
 dd if=/dev/zero of=$BASE_DIR/raspberry-manager.img bs=512 count=1400000
 
 # Create the partition and set it bootable
