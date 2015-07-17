@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Sources:
+# http://wiki.osdev.org/Loopback_Device#Creating_an_image
+
 SUITE="jessie"
 MIRROR="http://ftp.us.debian.org/debian/"
 GIT_REPOSITORY="https://raw.githubusercontent.com/JPG-Consulting/PiManagerLive"
@@ -51,10 +54,11 @@ if [ -f /tmp/raspberry-manager.img ]; then
   rm /tmp/raspberry-manager.img
 fi
 
-dd if=/dev/zero of=/tmp/raspberry-manager.img bs=512 count=2048000
+$cylinders=2000
+dd if=/dev/zero of=/tmp/raspberry-manager.img bs=516096c count=$cylinders
 
 # Create the partition and set it bootable
-fdisk /tmp/raspberry-manager.img <<EOF
+fdisk -u -C$cylinders -S63 -H16 /tmp/raspberry-manager.img <<EOF
 n
 p
 1
