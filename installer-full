@@ -107,7 +107,12 @@ chown root:root /mnt/liveusb/tmp/raspbian-manager-installer/installer-chroot
 chmod +x /mnt/liveusb/tmp/raspbian-manager-installer/installer-chroot
 
 # copy the installer configurtion file so it is accessible from chroot
-cp /tmp/raspbian-manager-installer/installer.conf /mnt/liveusb/tmp/raspbian-manager-installer/installer.conf
+if [ -f /tmp/raspbian-manager-installer/installer.conf ]; then
+    if [ ! -d /mnt/liveusb/tmp/raspbian-manager-installer ]; then
+        mkdir -p /mnt/liveusb/tmp/raspbian-manager-installer
+    fi
+    cp /tmp/raspbian-manager-installer/installer.conf /mnt/liveusb/tmp/raspbian-manager-installer/installer.conf
+fi
 
 # A couple of important steps before we chroot
 mount -o bind /dev /mnt/liveusb/dev
