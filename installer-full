@@ -52,6 +52,11 @@ install-mbr $IMAGE
 device=`kpartx -vas $IMAGE | sed -E 's/.*(loop[0-9])p.*/\1/g' | head -1`
 device="/dev/mapper/${device}"
 LOOPBACK_PARTITION=${device}p1
+if [ ! -b $LLOPBACK_PARTITION ]; then
+    echo "Error: Can't find root image partition, as $LOOPBACK_PARTITION."
+    kpartx -d $IMAGE
+    exit 1
+fi
 
 mkfs.ext2 $LOOPBACK_PARTITION
 if [ $? -ne 0 ]; then
