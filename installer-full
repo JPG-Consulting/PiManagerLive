@@ -28,7 +28,7 @@ dd if=/dev/zero of=/tmp/raspberry-manager.img bs=516096c count=$cylinders
 device=`losetup -f --show /tmp/raspberry-manager.img`
 
 #Create partitions
-fdisk -u -C$cylinders -S63 -H16 $device <<EOF
+fdisk $device <<EOF
 n
 p
 1
@@ -39,9 +39,11 @@ w
 EOF
 
 losetup -d $device
-
 device=`kpartx -va /tmp/raspberry-manager.img | sed -E 's/.*(loop[0-9])p.*/\1/g' | head -1`
 device="/dev/mapper/${device}"
-bootp=${device}p1
+rootp=${device}p2
+
+echo "device: $device"
+echo "Root partition: $rootp"
 
 kpartx -d /tmp/raspberry-manager.img
