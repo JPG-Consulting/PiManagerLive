@@ -2,6 +2,8 @@
 
 SUITE="jessie"
 MIRROR="http://ftp.us.debian.org/debian/"
+GIT_REPOSITORY="https://raw.githubusercontent.com/JPG-Consulting/PiManagerLive"
+GIT_BRANCH="development"
 
 if [ $EUID -ne 0 ]; then
     echo "ERROR: This tool must be run as root"
