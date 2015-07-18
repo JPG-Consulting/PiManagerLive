@@ -19,27 +19,24 @@ apt-get upgrade
 #                 Image creation                 #
 #------------------------------------------------#
 if [ -f /tmp/raspberry-manager.img ]; then
-  rm /tmp/raspberry-manager.img
+    rm /tmp/raspberry-manager.img
 fi
 
 cylinders=2000
 dd if=/dev/zero of=/tmp/raspberry-manager.img bs=516096c count=$cylinders
 
+device=`losetup -f --show /tmp/raspberry-manager.img`
+
 #Create partitions
-parted -s /tmp/raspberry-manager.img mklabel msdos
-parted -s /tmp/raspberry-manager.img primary 0% 100%
-parted -s /tmp/raspberry-manager.img set 1 boot on
+fdisk -u -C$cylinders -S63 -H16 $device <<EOF
+n
+p
+1
 
-# Install Master Boot Record
-install-mbr /tmp/raspberry-manager.img
 
-# Mount the partitions
-modprobe dm_mod
-kpartx -av /tmp/raspberry-manager.img
-# Hopefully it’s loop0p1..
-LOOPBACK_PARTITION=/dev/mapper/loop0p1
+a
+w
+EOF
 
 
 
-# Cleanup
-#kpartx -d /tmp/raspberry-manager.img
