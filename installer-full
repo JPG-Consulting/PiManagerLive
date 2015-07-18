@@ -39,18 +39,21 @@ a
 w
 EOF
 
+# Install Master Boot Record
+install-mbr /tmp/raspberry-manager.img
+
 device=`kpartx -vas /tmp/raspberry-manager.img | sed -E 's/.*(loop[0-9])p.*/\1/g' | head -1`
 device="/dev/mapper/${device}"
-rootp=${device}p1
+LOOPBACK_PARTITION=${device}p1
 
-mkfs.ext2 $rootp
+mkfs.ext2 $LOOPBACK_PARTITION
 if [ $? -ne 0 ]; then
     echo "Error: failed to format image file partition."
     kpartx -d /tmp/raspberry-manager.img
     exit 1
 fi
 
-tune2fs -c 0 -i 0 $rootp
+tune2fs -c 0 -i 0 $LOOPBACK_PARTITION
 
 #------------------------------------------------#
 #                   Mount image                  #
@@ -60,7 +63,7 @@ if [ ! -d /mnt/liveusb ]; then
     mkdir /mnt/liveusb
 fi
 
-mount $rootp /mnt/liveusb
+mount $LOOPBACK_PARTITION /mnt/liveusb
 if [ $? -ne 0 ]; then
     echo "Error: unable to mount image."
     kpartx -d /tmp/raspberry-manager.img
@@ -78,6 +81,82 @@ if [ $? -ne 0 ]; then
     kpartx -d /tmp/raspberry-manager.img
     exit 1
 fi
+
+#------------------------------------------------#
+#       Download base system setup script        #
+#------------------------------------------------#
+# Download the common chroot installation script
+if [ ! -d /mnt/liveusb/tmp/raspbian-manager-installer ]; then
+    mkdir -p /mnt/liveusb/tmp/raspbian-manager-installer
+fi
+
+wget $GIT_REPOSITORY/$GIT_BRANCH/installer-chroot -O /mnt/liveusb/tmp/raspbian-manager-installer/installer-chroot
+if [ $? -ne 0 ]; then
+    echo "Error: Unable to download chroot environment installer."
+    umount /mnt/liveusb
+    kpartx -d /tmp/raspberry-manager.img
+    exit 1
+fi
+
+chown root:root /mnt/liveusb/tmp/raspbian-manager-installer/installer-chroot
+chmod +x /mnt/liveusb/tmp/raspbian-manager-installer/installer-chroot
+
+#------------------------------------------------#
+#                     Chroot                     #
+#------------------------------------------------#
+# A couple of important steps before we chroot
+mount -o bind /dev /mnt/liveusb/dev
+cp /etc/resolv.conf /mnt/liveusb/etc/resolv.conf
+
+chroot /mnt/liveusb /bin/bash -x <<'EOF'
+mount none -t proc /proc
+mount none -t sysfs /sys
+mount none -t devpts /dev/pts
+export HOME=/root
+export LC_ALL=C
+apt-get update
+apt-get install dialog dbus --yes --force-yes
+dbus-uuidgen > /var/lib/dbus/machine-id
+/tmp/raspbian-manager-installer/installer-chroot
+exit
+EOF
+
+# Chroot specific settings for full install
+chroot /mnt/liveusb /bin/bash -x <<'EOF'
+apt-get --yes install grub
+update-grub
+exit
+EOF
+
+chroot /mnt/liveusb /bin/bash -x <<'EOF'
+rm -f /var/lib/dbus/machine-id
+apt-get clean
+umount -lf /proc
+umount -lf /sys
+umount -lf /dev/pts
+exit
+EOF
+
+# Cleanup
+umount -lf /mnt/liveusb/dev
+rm /mnt/liveusb/etc/resolv.conf
+rm -rf /mnt/liveusb/tmp/*
+
+#------------------------------------------------#
+#               Set up /etc/fstab                #
+#------------------------------------------------#
+PARTITION_UUID=`blkid -o value -s UUID ${LOOPBACK_PARTITION}`
+
+
+#------------------------------------------------#
+#                 Set up extlinux                #
+#------------------------------------------------#
+VMLINUZ=`chroot /mnt/liveusb find boot/ -name "vmlinuz-*"`
+INITRD=`chroot /mnt/liveusb find boot/ -name "initrd*"`
+echo -e "default linux\ntimeout 1\n\nlabel linux\nkernel ${VMLINUZ}\nappend initrd=${INITRD} root=UUID=${PARTITION_UUID} ro quiet" > /mnt/liveusb/extlinux.conf
+#cat /mnt/liveusb/extlinux.conf
+
+extlinux --install /mnt/liveusb/
 
 #------------------------------------------------#
 #        Unmount image and device loop           #
