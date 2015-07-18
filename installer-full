@@ -28,10 +28,8 @@ fi
 cylinders=2000
 dd if=/dev/zero of=/tmp/raspberry-manager.img bs=516096c count=$cylinders
 
-device=`losetup -f --show /tmp/raspberry-manager.img`
-
 #Create partitions
-fdisk $device <<EOF
+fdisk /tmp/raspberry-manager.img <<EOF
 n
 p
 1
@@ -41,12 +39,17 @@ a
 w
 EOF
 
-losetup -d $device
 device=`kpartx -va /tmp/raspberry-manager.img | sed -E 's/.*(loop[0-9])p.*/\1/g' | head -1`
 device="/dev/mapper/${device}"
 rootp=${device}p1
 
 mkfs.ext2 $rootp
+if [ $? -ne 0 ]; then
+    echo "Error: failed to format image file partition."
+    kpartx -d /tmp/raspberry-manager.img
+    exit 1
+fi
+
 tune2fs -c 0 -i 0 $rootp
 
 # Mount the partition
