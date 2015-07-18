@@ -4,6 +4,7 @@ SUITE="jessie"
 MIRROR="http://ftp.us.debian.org/debian/"
 GIT_REPOSITORY="https://raw.githubusercontent.com/JPG-Consulting/PiManagerLive"
 GIT_BRANCH="development"
+IMAGE="/tmp/raspberry-manager.img"
 
 if [ $EUID -ne 0 ]; then
     echo "ERROR: This tool must be run as root"
@@ -23,15 +24,19 @@ apt-get upgrade
 #------------------------------------------------#
 #                 Image creation                 #
 #------------------------------------------------#
-if [ -f /tmp/raspberry-manager.img ]; then
-    rm /tmp/raspberry-manager.img
+if [ -z $IMAGE ]; then
+    IMAGE="/tmp/raspberry-manager.img"
+fi
+
+if [ -f $IMAGE ]; then
+    rm $IMAGE
 fi
 
 cylinders=2000
-dd if=/dev/zero of=/tmp/raspberry-manager.img bs=516096c count=$cylinders
+dd if=/dev/zero of=$IMAGE bs=516096c count=$cylinders
 
 #Create partitions
-fdisk /tmp/raspberry-manager.img <<EOF
+fdisk $IMAGE <<EOF
 n
 p
 1
@@ -42,16 +47,16 @@ w
 EOF
 
 # Install Master Boot Record
-install-mbr /tmp/raspberry-manager.img
+install-mbr $IMAGE
 
-device=`kpartx -vas /tmp/raspberry-manager.img | sed -E 's/.*(loop[0-9])p.*/\1/g' | head -1`
+device=`kpartx -vas $IMAGE | sed -E 's/.*(loop[0-9])p.*/\1/g' | head -1`
 device="/dev/mapper/${device}"
 LOOPBACK_PARTITION=${device}p1
 
 mkfs.ext2 $LOOPBACK_PARTITION
 if [ $? -ne 0 ]; then
     echo "Error: failed to format image file partition."
-    kpartx -d /tmp/raspberry-manager.img
+    kpartx -d $IMAGE
     exit 1
 fi
 
@@ -68,7 +73,7 @@ fi
 mount $LOOPBACK_PARTITION /mnt/liveusb
 if [ $? -ne 0 ]; then
     echo "Error: unable to mount image."
-    kpartx -d /tmp/raspberry-manager.img
+    kpartx -d $IMAGE
     exit 1
 fi
 
@@ -80,7 +85,7 @@ debootstrap --arch=i386 --variant=minbase $SUITE /mnt/liveusb $MIRROR
 if [ $? -ne 0 ]; then
     echo "Error: Unable to debootstrap"
     umount /mnt/liveusb
-    kpartx -d /tmp/raspberry-manager.img
+    kpartx -d $IMAGE
     exit 1
 fi
 
@@ -96,7 +101,7 @@ wget $GIT_REPOSITORY/$GIT_BRANCH/installer-chroot -O /mnt/liveusb/tmp/raspbian-m
 if [ $? -ne 0 ]; then
     echo "Error: Unable to download chroot environment installer."
     umount /mnt/liveusb
-    kpartx -d /tmp/raspberry-manager.img
+    kpartx -d $IMAGE
     exit 1
 fi
 
@@ -164,4 +169,4 @@ extlinux --install /mnt/liveusb/
 #        Unmount image and device loop           #
 #------------------------------------------------#
 umount /mnt/liveusb
-kpartx -d /tmp/raspberry-manager.img
+kpartx -d $IMAGE
