@@ -1,0 +1,40 @@
+#!/bin/bash
+
+#------------------------------------------------#
+#                 Pre-requisites                 #
+#------------------------------------------------#
+
+sudo apt-get update
+sudo apt-get install --yes debootstrap curl mbr extlinux parted kpartx wget ca-certificates
+# An apt cache makes subsequent image-building much faster
+sudo apt-get install --yes apt-cacher-ng
+sudo apt-get upgrade
+
+#------------------------------------------------#
+#                 Image creation                 #
+#------------------------------------------------#
+if [ -f /tmp/raspberry-manager.img ]; then
+  rm /tmp/raspberry-manager.img
+fi
+
+cylinders=2000
+dd if=/dev/zero of=/tmp/raspberry-manager.img bs=516096c count=$cylinders
+
+#Create partitions
+parted -s /tmp/raspberry-manager.img mklabel msdos
+parted -s /tmp/raspberry-manager.img primary 0% 100%
+parted -s /tmp/raspberry-manager.img set 1 boot on
+
+# Install Master Boot Record
+install-mbr /tmp/raspberry-manager.img
+
+# Mount the partitions
+modprobe dm_mod
+kpartx -av /tmp/raspberry-manager.img
+# Hopefully it’s loop0p1..
+LOOPBACK_PARTITION=/dev/mapper/loop0p1
+
+
+
+# Cleanup
+#kpartx -d /tmp/raspberry-manager.img
