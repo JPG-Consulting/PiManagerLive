@@ -43,7 +43,8 @@ device=`kpartx -va /tmp/raspberry-manager.img | sed -E 's/.*(loop[0-9])p.*/\1/g'
 device="/dev/mapper/${device}"
 rootp=${device}p1
 
-echo "Device is $device and root partition is $rootp"
+# If we don't delay then errors happen
+sleep 1
 
 mkfs.ext2 $rootp
 if [ $? -ne 0 ]; then
