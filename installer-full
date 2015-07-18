@@ -4,11 +4,11 @@
 #                 Pre-requisites                 #
 #------------------------------------------------#
 
-sudo apt-get update
-sudo apt-get install --yes debootstrap curl mbr extlinux parted kpartx wget ca-certificates
+apt-get update
+apt-get install --yes debootstrap curl mbr extlinux parted kpartx wget ca-certificates
 # An apt cache makes subsequent image-building much faster
-sudo apt-get install --yes apt-cacher-ng
-sudo apt-get upgrade
+apt-get install --yes apt-cacher-ng
+apt-get upgrade
 
 #------------------------------------------------#
 #                 Image creation                 #
