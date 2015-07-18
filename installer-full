@@ -44,7 +44,7 @@ EOF
 losetup -d $device
 device=`kpartx -va /tmp/raspberry-manager.img | sed -E 's/.*(loop[0-9])p.*/\1/g' | head -1`
 device="/dev/mapper/${device}"
-rootp=${device}p2
+rootp=${device}p1
 
 mkfs.ext2 $rootp
 tune2fs -c 0 -i 0 $rootp
