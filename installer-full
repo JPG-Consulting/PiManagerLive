@@ -54,7 +54,12 @@ if [ ! -d /mnt/liveusb ]; then
     mkdir /mnt/liveusb
 fi
 
-mount /dev/loop1 /mnt/liveusb
+mount $rootp /mnt/liveusb
+if [ $? -ne 0 ]; then
+    echo "Error: unable to mount image."
+    kpartx -d /tmp/raspberry-manager.img
+    exit 1
+fi
 
 # Setup the base Debian environment
 debootstrap --arch=i386 --variant=minbase $SUITE /mnt/liveusb $MIRROR
