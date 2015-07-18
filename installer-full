@@ -173,5 +173,5 @@ extlinux --install /mnt/liveusb/
 #------------------------------------------------#
 #        Unmount image and device loop           #
 #------------------------------------------------#
-umount /mnt/liveusb
+umount -lf /mnt/liveusb
 kpartx -d $IMAGE
