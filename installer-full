@@ -73,4 +73,6 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+# Cleanup
+umount /mnt/liveusb
 kpartx -d /tmp/raspberry-manager.img
