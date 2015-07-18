@@ -1,5 +1,8 @@
 #!/bin/bash
 
+SUITE="jessie"
+MIRROR="http://ftp.us.debian.org/debian/"
+
 if [ $EUID -ne 0 ]; then
     echo "ERROR: This tool must be run as root"
     exit 1
@@ -43,7 +46,23 @@ device=`kpartx -va /tmp/raspberry-manager.img | sed -E 's/.*(loop[0-9])p.*/\1/g'
 device="/dev/mapper/${device}"
 rootp=${device}p2
 
-echo "device: $device"
-echo "Root partition: $rootp"
+mkfs.ext2 $rootp
+tune2fs -c 0 -i 0 $rootp
+
+# Mount the partition
+if [ ! -d /mnt/liveusb ]; then
+    mkdir /mnt/liveusb
+fi
+
+mount /dev/loop1 /mnt/liveusb
+
+# Setup the base Debian environment
+debootstrap --arch=i386 --variant=minbase $SUITE /mnt/liveusb $MIRROR
+if [ $? -ne 0 ]; then
+    echo "Error: Unable to debootstrap"
+    umount /mnt/liveusb
+    kpartx -d /tmp/raspberry-manager.img
+    exit 1
+fi
 
 kpartx -d /tmp/raspberry-manager.img
