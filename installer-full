@@ -38,5 +38,10 @@ a
 w
 EOF
 
+losetup -d $device
 
+device=`kpartx -va /tmp/raspberry-manager.img | sed -E 's/.*(loop[0-9])p.*/\1/g' | head -1`
+device="/dev/mapper/${device}"
+bootp=${device}p1
 
+kpartx -d /tmp/raspberry-manager.img
