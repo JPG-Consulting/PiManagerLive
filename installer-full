@@ -52,6 +52,9 @@ fi
 
 tune2fs -c 0 -i 0 $rootp
 
+#------------------------------------------------#
+#                   Mount image                  #
+#------------------------------------------------#
 # Mount the partition
 if [ ! -d /mnt/liveusb ]; then
     mkdir /mnt/liveusb
@@ -64,6 +67,9 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+#------------------------------------------------#
+#              Set the base system               #
+#------------------------------------------------#
 # Setup the base Debian environment
 debootstrap --arch=i386 --variant=minbase $SUITE /mnt/liveusb $MIRROR
 if [ $? -ne 0 ]; then
@@ -73,6 +79,8 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Cleanup
+#------------------------------------------------#
+#        Unmount image and device loop           #
+#------------------------------------------------#
 umount /mnt/liveusb
 kpartx -d /tmp/raspberry-manager.img
