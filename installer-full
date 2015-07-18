@@ -39,12 +39,9 @@ a
 w
 EOF
 
-device=`kpartx -va /tmp/raspberry-manager.img | sed -E 's/.*(loop[0-9])p.*/\1/g' | head -1`
+device=`kpartx -vas /tmp/raspberry-manager.img | sed -E 's/.*(loop[0-9])p.*/\1/g' | head -1`
 device="/dev/mapper/${device}"
 rootp=${device}p1
-
-# If we don't delay then errors happen
-sleep 1
 
 mkfs.ext2 $rootp
 if [ $? -ne 0 ]; then
