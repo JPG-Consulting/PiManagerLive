@@ -60,7 +60,7 @@ if [ ! -b $LOOPBACK_PARTITION ]; then
     exit 1
 fi
 
-mkfs.ext2 $LOOPBACK_PARTITION
+mkfs.ext3 $LOOPBACK_PARTITION
 if [ $? -ne 0 ]; then
     echo "Error: failed to format image file partition."
     kpartx -d $IMAGE
