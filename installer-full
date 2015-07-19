@@ -45,32 +45,15 @@ dd if=/dev/zero of=$IMAGE bs=516096c count=$cylinders
 #a
 #w
 #EOF
-fdisk $IMAGE <<EOF
-g
-n
-1
-
-+16M
-t
-1
-4
-n
-2
-
-
-t
-2
-15
-w
-EOF
+parted -s $IMAGE mklabel gpt
+parted -s $IMAGE mkpart primary ext3 2M 100%
 
 # Install Master Boot Record
 #install-mbr $IMAGE
 
 device=`kpartx -vas $IMAGE | sed -E 's/.*(loop[0-9])p.*/\1/g' | head -1`
 device="/dev/mapper/${device}"
-BOOT_PARTITION=${device}p1
-LOOPBACK_PARTITION=${device}p2
+LOOPBACK_PARTITION=${device}p1
 if [ ! -b $LOOPBACK_PARTITION ]; then
     echo "Error: Can't find root image partition, as $LOOPBACK_PARTITION."
     kpartx -d $IMAGE
