@@ -36,23 +36,42 @@ cylinders=2000
 dd if=/dev/zero of=$IMAGE bs=516096c count=$cylinders
 
 #Create partitions
+#fdisk $IMAGE <<EOF
+#n
+#p
+#1
+#
+#
+#a
+#w
+#EOF
 fdisk $IMAGE <<EOF
+g
 n
-p
 1
 
++16M
+t
+1
+4
+n
+2
 
-a
+
+t
+2
+15
 w
 EOF
 
 # Install Master Boot Record
-install-mbr $IMAGE
+#install-mbr $IMAGE
 
 device=`kpartx -vas $IMAGE | sed -E 's/.*(loop[0-9])p.*/\1/g' | head -1`
 device="/dev/mapper/${device}"
-LOOPBACK_PARTITION=${device}p1
-if [ ! -b $LLOPBACK_PARTITION ]; then
+BOOT_PARTITION=${device}p1
+LOOPBACK_PARTITION=${device}p2
+if [ ! -b $LOOPBACK_PARTITION ]; then
     echo "Error: Can't find root image partition, as $LOOPBACK_PARTITION."
     kpartx -d $IMAGE
     exit 1
@@ -136,7 +155,6 @@ EOF
 # Chroot specific settings for full install
 chroot /mnt/liveusb /bin/bash -x <<'EOF'
 apt-get --yes install grub
-update-grub
 exit
 EOF
 
@@ -163,12 +181,12 @@ PARTITION_UUID=`blkid -o value -s UUID ${LOOPBACK_PARTITION}`
 #------------------------------------------------#
 #                 Set up extlinux                #
 #------------------------------------------------#
-VMLINUZ=`chroot /mnt/liveusb find boot/ -name "vmlinuz-*"`
-INITRD=`chroot /mnt/liveusb find boot/ -name "initrd*"`
-echo -e "default linux\ntimeout 1\n\nlabel linux\nkernel ${VMLINUZ}\nappend initrd=${INITRD} root=UUID=${PARTITION_UUID} ro quiet" > /mnt/liveusb/extlinux.conf
+#VMLINUZ=`chroot /mnt/liveusb find boot/ -name "vmlinuz-*"`
+#INITRD=`chroot /mnt/liveusb find boot/ -name "initrd*"`
+#echo -e "default linux\ntimeout 1\n\nlabel linux\nkernel ${VMLINUZ}\nappend initrd=${INITRD} root=UUID=${PARTITION_UUID} ro quiet" > /mnt/liveusb/extlinux.conf
 #cat /mnt/liveusb/extlinux.conf
 
-extlinux --install /mnt/liveusb/
+#extlinux --install /mnt/liveusb/
 
 #------------------------------------------------#
 #        Unmount image and device loop           #
